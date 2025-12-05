@@ -1,35 +1,31 @@
 # Build stage
-FROM node:18-alpine AS builder
+FROM node:18-alpine AS build
 
 WORKDIR /app
 
 # Copy package files
-COPY package.json package-lock.json ./
+COPY package*.json ./
 
 # Install dependencies
 RUN npm ci
 
-# Copy source code and configuration
+# Copy all files
 COPY . .
 
-# Build the application
+# Build the app
 RUN npm run build
 
 # Production stage
 FROM nginx:alpine
 
-# Copy built assets from builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Copy build output
+COPY --from=build /app/dist /usr/share/nginx/html
 
-# Copy nginx configuration from builder stage
-COPY --from=builder /app/nginx.conf /etc/nginx/conf.d/default.conf
+# Copy nginx config
+COPY --from=build /app/nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose port 3000
+# Expose port
 EXPOSE 3000
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --quiet --tries=1 --spider http://localhost:3000/ || exit 1
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]
