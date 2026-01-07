@@ -17,8 +17,11 @@ RUN npm run build
 # Remove devDependencies to reduce image size
 RUN npm prune --production
 
-# Expose port 3000
-EXPOSE 3000
+# Expose port 80
+EXPOSE 80
+
+# Set the PORT environment variable
+ENV PORT=80
 
 # Start the server
 CMD ["npm", "start"]
